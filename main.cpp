@@ -14,7 +14,7 @@ using wmath::pow;
 using wmath::long_mul;
 
 int main() {
-  uint64_t tmp[256]{};
+  /*uint64_t tmp[256]{};
   for (uint64_t i=1;i!=256;++i) {
     cout << i-gold::largest_fibonacci_less_than(i)-1 << endl;
     for (uint64_t j=0;j!=256;++j) {
@@ -29,8 +29,8 @@ int main() {
       }
     }
     cout << endl;
-  }
-  /*gold::fibonacci_table test;
+  }*/
+  gold::fibonacci_table test;
   for (size_t i=0;i!=30;++i) {
     test.insert(
         get<0>(
@@ -41,5 +41,5 @@ int main() {
           )
         );
     test.print_table();
-  }*/
+  }
 }

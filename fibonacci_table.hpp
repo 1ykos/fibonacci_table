@@ -139,30 +139,38 @@ namespace gold{
       for (i=map_key;is_set(i);i=(i+1==num_data)?0:i+1);
       set(i);
       data[i] = key;
-      cout << "insert at " << i << endl;
+      //cout << "insert at " << i << endl;
       while (true) {
         const uint64_t j = i?i-1:num_data-1;
         if (!is_set(j)) {
-          cout << "encountered empty slot" << endl;
+          //cout << "encountered empty slot" << endl;
           break;
         }
-        if (i<=fibonacci_mapping(data[j],num_data)) {
-          cout << i << " " << j << " seems to be in order" << endl;
-          break;
-        }
-        if (map_key<=fibonacci_mapping(data[j],num_data)) {
-          cout << i << " " << j << " seems to be in order" << endl;
+        if (map_key>=fibonacci_mapping(data[j],num_data)) {
+          //cout << i << " " << j << " seems to be in order" << endl;
           break;
         }
         swap(data[j],data[i]);
       }
-      cout << "moved to " << i << endl;
+      //cout << "moved to " << i << endl;
       return data[i];
     }
     inline uint64_t& insert_assuming_space(const uint64_t& key) {
       return insert_assuming_space(key,fibonacci_mapping(key,num_data));
     }
+    void print_table() {
+      cout << endl;
+      for (uint64_t i=0;i!=num_data;++i) {
+        cout << "|";
+        if (is_set(i)) {
+          cout<<data[i]<<" "<<fibonacci_mapping(data[i],num_data);
+        }
+        cout << endl;
+      }
+      cout << endl;
+    }
     inline void resize(const uint64_t size) {
+      print_table();
       //cout << "resize to " << size << " (" << num_elem << ")" << endl;
       if (size==num_data) return;
       if (size <num_elem) throw std::domain_error(
@@ -257,6 +265,7 @@ namespace gold{
           insert(tmp);
         }
       }
+      print_table();
     }
     // load_factor = 2/3
     void inline ensure_size(uint64_t size) {
@@ -279,20 +288,6 @@ namespace gold{
       const uint64_t i = find_node(key,map_key);
       if (i<num_data) return data[i];
       return insert(key,map_key);
-    }
-    void print_table() {
-      //for (uint64_t i=0;i!=num_data;++i) {
-      //  cout << (is_set(i)?'x':'o');
-      //}
-      cout << endl;
-      for (uint64_t i=0;i!=num_data;++i) {
-        cout << "|";
-        if (is_set(i)) {
-          cout<<data[i]<<" "<<fibonacci_mapping(data[i],num_data);
-        }
-        cout << endl;
-      }
-      cout << endl;
     }
     ~fibonacci_table(){
       free(data);
