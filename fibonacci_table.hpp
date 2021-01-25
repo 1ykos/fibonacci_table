@@ -184,9 +184,11 @@ namespace gold{
       return insert_assuming_space(key,fibonacci_mapping(key,num_data));
     }
     void print_table() {
-      //for (uint64_t i=0;i!=num_data;++i) cout << (is_set(i)?'x':'-');
-      //cout << endl;
-      //return;
+      for (uint64_t i=0;i!=num_data;++i) {
+        cout << (is_set(i)?'x':'-');
+        cout << endl;
+      }
+      return;
       cout << "table size = " << num_data << endl;
       for (uint64_t i=0;i!=num_data;++i) {
         cout << "|";
@@ -299,7 +301,7 @@ namespace gold{
     inline uint64_t& insert(const uint64_t& key) {
       return insert(key,fibonacci_mapping(key,num_data));
     }
-    inline uint64_t count(uint64_t& key) {
+    inline uint64_t count(const uint64_t key) {
       return find_node(key)<num_data;
     }
     inline uint64_t& operator[](const uint64_t& key) {
