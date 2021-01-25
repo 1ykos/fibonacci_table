@@ -34,10 +34,10 @@ namespace gold{
   }
   
   // value assumed to be less than 12200160415121876738
-  uint64_t inline fibonacci_mapping(uint64_t value,const uint64_t max) {
+  uint64_t constexpr fibonacci_mapping(uint64_t value,const uint64_t max) {
     uint64_t i= 4660046610375530309ull;
     uint64_t j= 7540113804746346429ull;
-    uint64_t k= 0;
+    uint64_t k= 1;
     uint64_t l= 1;
     uint64_t map = 0;
     while (j>0) {
@@ -52,6 +52,24 @@ namespace gold{
       k=l-k;
     }
     return map;
+  }
+
+  uint64_t constexpr largest_fibonacci_not_greater_than(uint64_t value) {
+    uint64_t i=1,j=0;
+    while ((i+j>=i)&&(i+j<=value)) {
+      j=j+i;
+      i=j-i;
+    }
+    return j;
+  }
+  
+  uint64_t constexpr largest_fibonacci_less_than(uint64_t value) {
+    uint64_t i=1,j=0;
+    while ((i+j>=i)&&(i+j<value)) {
+      j=j+i;
+      i=j-i;
+    }
+    return j;
   }
   
   struct fibonacci_table{
@@ -96,8 +114,14 @@ namespace gold{
       uint64_t i=position;
       while (true) {
         const uint64_t j=i+1>num_data?0:i+1;
-        if (!is_set(j)) break;
-        if (i<=fibonacci_mapping(data[j],num_data)) break;
+        if (!is_set(j)) {
+          //cout << "encountered empty slot" << endl;
+          break;
+        }
+        if (i<=fibonacci_mapping(data[j],num_data)) {
+          //cout << i << " " << j << " seems to be in order" << endl;
+          break;
+        }
         data[i]=data[j];
         i=j;
       }
@@ -112,19 +136,27 @@ namespace gold{
         const uint64_t key,
         const uint64_t map_key) {
       uint64_t i;
-      //for (uint64_t i=0;i!=num_data;++i) {
-      //  cout << (is_set(i)?'x':'o');
-      //}
-      //cout << endl;
       for (i=map_key;is_set(i);i=(i+1==num_data)?0:i+1);
       set(i);
       data[i] = key;
+      cout << "insert at " << i << endl;
       while (true) {
         const uint64_t j = i?i-1:num_data-1;
-        if (!is_set(j)) break;
-        if (fibonacci_mapping(data[j],num_data)>map_key) swap(data[j],data[i]);
-        else break;
+        if (!is_set(j)) {
+          cout << "encountered empty slot" << endl;
+          break;
+        }
+        if (i<=fibonacci_mapping(data[j],num_data)) {
+          cout << i << " " << j << " seems to be in order" << endl;
+          break;
+        }
+        if (map_key<=fibonacci_mapping(data[j],num_data)) {
+          cout << i << " " << j << " seems to be in order" << endl;
+          break;
+        }
+        swap(data[j],data[i]);
       }
+      cout << "moved to " << i << endl;
       return data[i];
     }
     inline uint64_t& insert_assuming_space(const uint64_t& key) {
@@ -170,21 +202,55 @@ namespace gold{
           }
         }
         if (old_num_data==0) return;
-        uint64_t from = 0;
+        /*uint64_t from = 0;
         {
           uint64_t i=1,j=1;
-          while ((i+j>i)&&(i+j<old_num_data)) {
+          while ((i+j>=i)&&(i+j<old_num_data)) {
+            j=j+i;
+            i=j-i;
+            from = old_num_data-j-1;
+            cout << "from = " << from;
+            if (is_set(from))
+              cout << " " << fibonacci_mapping(data[from],num_data);
+            cout << endl;
+            for (uint64_t i=from,j=0;
+               //(j<old_num_data);
+                 (j<num_data)&&((j<=num_data-old_num_data)||is_set(i));
+                 ((i=((i+1)==old_num_data)?0:i+1),++j)) {
+              if (fibonacci_mapping(data[i],num_data)<old_num_data) continue;
+              if (!is_set(i)) continue;
+              const auto tmp = data[i];
+              erase(data[i],i);
+              insert(tmp);
+            }
+          }
+        }*/
+        /*
+        uint64_t from = 0;
+        {
+          uint64_t i=1,j=0;
+          while ((i+j>=i)&&(i+j<old_num_data)) {
             j=j+i;
             i=j-i;
           }
-          from = old_num_data-j;
+          from = old_num_data-j-1;
         }
-        //cout << "from = " << from << endl;
-        for (uint64_t i=from,j=0;
-           //(j<old_num_data);
-             (j<num_data)&&((j<num_data-old_num_data)||is_set(i));
-             ((i=((i+1)==old_num_data)?0:i+1),++j)) {
+        for (uint64_t i=from;i!=old_num_data;++i) {
           if (fibonacci_mapping(data[i],num_data)<old_num_data) continue;
+          if (!is_set(i)) continue;
+          const auto tmp = data[i];
+          erase(data[i],i);
+          insert(tmp);
+        }
+        for (uint64_t i=0;i!=old_num_data;++i) {
+          if (!is_set(i)) break;
+          if (fibonacci_mapping(data[i],num_data)<old_num_data) continue;
+          const auto tmp = data[i];
+          erase(data[i],i);
+          insert(tmp);
+        }
+        */
+        for (uint64_t i=0;i!=old_num_data;++i) {
           if (!is_set(i)) continue;
           const auto tmp = data[i];
           erase(data[i],i);
@@ -200,14 +266,6 @@ namespace gold{
     }
     inline uint64_t& insert(const uint64_t& key,const uint64_t& map_key) {
       ensure_size(num_elem+1);
-      for (uint64_t i=0;i!=num_data;++i) {
-        //cout << "|";
-        //if (is_set(i)) {
-        //  cout<<data[i]<<" "<<fibonacci_mapping(data[i],num_data);
-        //}
-        //cout << endl;
-      }
-      //cout << endl;
       return insert_assuming_space(key);
     }
     inline uint64_t& insert(const uint64_t& key) {
@@ -221,6 +279,20 @@ namespace gold{
       const uint64_t i = find_node(key,map_key);
       if (i<num_data) return data[i];
       return insert(key,map_key);
+    }
+    void print_table() {
+      //for (uint64_t i=0;i!=num_data;++i) {
+      //  cout << (is_set(i)?'x':'o');
+      //}
+      cout << endl;
+      for (uint64_t i=0;i!=num_data;++i) {
+        cout << "|";
+        if (is_set(i)) {
+          cout<<data[i]<<" "<<fibonacci_mapping(data[i],num_data);
+        }
+        cout << endl;
+      }
+      cout << endl;
     }
     ~fibonacci_table(){
       free(data);
