@@ -1,3 +1,4 @@
+#include <chrono>
 #include "fibonacci_table.hpp"
 #include "wmath_hash.hpp"
 
@@ -10,10 +11,12 @@ using std::tuple;
 using std::get;
 using std::make_tuple;
 using std::string;
+using std::stoull;
 using wmath::pow;
 using wmath::long_mul;
+using wmath::popcount;
 
-int main() {
+int main(int argc, char** argv) {
   /*uint64_t tmp[256]{};
   for (uint64_t i=1;i!=256;++i) {
     cout << i-gold::largest_fibonacci_less_than(i)-1 << endl;
@@ -30,8 +33,9 @@ int main() {
     }
     cout << endl;
   }*/
+  auto start = std::clock();
   gold::fibonacci_table test;
-  for (size_t i=0;i!=30;++i) {
+  for (size_t i=0;i!=stoull(argv[1]);++i) {
     test.insert(
         get<0>(
           long_mul(
@@ -40,6 +44,6 @@ int main() {
             )
           )
         );
-    test.print_table();
+    if (wmath::popcount(i)==1) cout << i << " " << (std::clock()-start) << endl;
   }
 }

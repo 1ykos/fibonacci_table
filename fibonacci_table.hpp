@@ -12,6 +12,7 @@ namespace gold{
   using std::to_string;
   using std::cout;
   using std::endl;
+  using std::min;
 
   vector<bool> inline fibonacci_encoding(uint64_t value) {
     vector<bool> encoding;
@@ -63,13 +64,30 @@ namespace gold{
     return j;
   }
   
-  uint64_t constexpr largest_fibonacci_less_than(uint64_t value) {
+  uint64_t constexpr largest_fibonacci_less_than(const uint64_t value) {
     uint64_t i=1,j=0;
     while ((i+j>=i)&&(i+j<value)) {
       j=j+i;
       i=j-i;
     }
     return j;
+  }
+
+  uint64_t constexpr absolute_distance(const uint64_t a,const uint64_t b) {
+    if (a<b) return b-a;
+    else     return a-b;
+  }
+  
+  uint64_t constexpr modular_distance(
+      const uint64_t a,
+      const uint64_t b,
+      const uint64_t m)
+  {
+    if (a<b) {
+      return min(b-a,a+m-b);
+    } else {
+      return min(a-b,b+m-a);
+    }
   }
   
   struct fibonacci_table{
@@ -107,18 +125,20 @@ namespace gold{
       }
       return num_data;
     }
-    inline uint64_t find_node(const uint64_t& key) {
+    inline uint64_t find_node(const uint64_t key) {
       return find_node(key,fibonacci_mapping(key,num_data));
     }
-    void inline erase(const uint64_t& key,uint64_t position) {
-      uint64_t i=position;
+    void inline erase(const uint64_t key,uint64_t i) {
       while (true) {
         const uint64_t j=i+1>num_data?0:i+1;
         if (!is_set(j)) {
           //cout << "encountered empty slot" << endl;
           break;
         }
-        if (i<=fibonacci_mapping(data[j],num_data)) {
+        const uint64_t map_data_j = fibonacci_mapping(data[j],num_data);
+        if (modular_distance(i,map_data_j,num_data)
+          >=modular_distance(j,map_data_j,num_data)
+            ) {
           //cout << i << " " << j << " seems to be in order" << endl;
           break;
         }
@@ -135,7 +155,7 @@ namespace gold{
     inline uint64_t& insert_assuming_space(
         const uint64_t key,
         const uint64_t map_key) {
-      cout << "insert " << key << " " << map_key << endl;
+      //cout << "insert " << key << " " << map_key << endl;
       uint64_t i;
       for (i=map_key;is_set(i);i=(i+1==num_data)?0:i+1);
       set(i);
@@ -144,41 +164,50 @@ namespace gold{
       while (true) {
         const uint64_t j = i?i-1:num_data-1;
         if (!is_set(j)) {
-          cout << "encountered empty slot" << endl;
+          //cout << "encountered empty slot" << endl;
           break;
         }
-        if (map_key>=fibonacci_mapping(data[j],num_data)) {
-          cout << i << " " << j << " seems to be in order" << endl;
+        if (
+            modular_distance(i,map_key,                            num_data)
+          <=modular_distance(j,fibonacci_mapping(data[j],num_data),num_data)
+            ) {
+          //cout << i << " " << j << " seems to be in order" << endl;
           break;
         }
         swap(data[j],data[i]);
         i = j;
       }
-      cout << "moved to " << i << endl;
+      //cout << "moved to " << i << endl;
       return data[i];
     }
     inline uint64_t& insert_assuming_space(const uint64_t& key) {
       return insert_assuming_space(key,fibonacci_mapping(key,num_data));
     }
     void print_table() {
-      cout << endl;
+      //for (uint64_t i=0;i!=num_data;++i) cout << (is_set(i)?'x':'-');
+      //cout << endl;
+      //return;
+      cout << "table size = " << num_data << endl;
       for (uint64_t i=0;i!=num_data;++i) {
         cout << "|";
         if (is_set(i)) {
-          cout<<data[i]<<" "<<fibonacci_mapping(data[i],num_data);
+          const uint64_t map_data_i = fibonacci_mapping(data[i],num_data);
+          cout << data[i] << " " << map_data_i <<" "
+               << modular_distance(map_data_i,i,num_data);
         }
         cout << endl;
       }
       cout << endl;
     }
     inline void resize(const uint64_t size) {
-      print_table();
+      //print_table();
       //cout << "resize to " << size << " (" << num_elem << ")" << endl;
       if (size==num_data) return;
-      if (size <num_elem) throw std::domain_error(
+      if (size<=num_elem) throw std::domain_error(
             std::string(typeid(*this).name())
             +".resize("+to_string(size)+") :: "
-            +"can't resize the table to smaller than the number of elements"
+            +"can't resize the table to smaller than "
+            +"or equal the number of elements in the table."
            );
       const uint64_t old_num_data = num_data;
       num_data = size;
@@ -214,19 +243,36 @@ namespace gold{
         if (old_num_data==0) return;
         const uint64_t from =
           old_num_data-largest_fibonacci_not_greater_than(old_num_data); 
-        cout << "from " << from << " " << old_num_data << endl;
+        //cout << "from " << from << " " << old_num_data << endl;
         uint64_t i=from,j=0;
-        for (uint64_t i=from,j=0;
-             j!=num_data;
-             ((i=(i+1==old_num_data)?0:i+1),++j)) {
+        for (uint64_t i=from,j=0;j!=num_data;++j) {
           if (!is_set(i)) {
+            i=(i+1==old_num_data)?0:i+1;
             if (j<num_data-old_num_data) continue;
             else                         break;
           }
-          if (fibonacci_mapping(data[i],num_data)<old_num_data) continue;
+          //cout << "inspecting " << data[i] << " "
+          //     << fibonacci_mapping(data[i],num_data) << endl;
+          if (fibonacci_mapping(data[i],num_data)<old_num_data){
+            i=(i+1==old_num_data)?0:i+1;
+            continue;
+          }
+          const auto tmp = data[i];
+          //const uint64_t tmp_num_data = num_data;
+          //num_data = old_num_data;
+          erase(data[i],i);
+          //num_data = tmp_num_data;
+          insert_assuming_space(tmp);
+          if (data[i]==tmp) {
+            i=(i+1==old_num_data)?0:i+1;
+          }
+        }
+        for (uint64_t i=0;i!=num_data;++i) {
+          if (!is_set(i)) break;
           const auto tmp = data[i];
           erase(data[i],i);
-          insert(tmp);
+          insert_assuming_space(tmp);
+          if (data[i]==tmp) break;
         }
         /* // this is the stupid way
         for (uint64_t i=0;i!=old_num_data;++i) {
@@ -237,12 +283,13 @@ namespace gold{
         }
         */
       }
-      print_table();
+      //print_table();
     }
     // load_factor = 2/3
     void inline ensure_size(uint64_t size) {
       //cout << "ensure_size(" << size << ")" << endl;
-      const uint64_t min_size = 3*size/2;
+      const uint64_t min_size = 2*size;
+      //if (num_data<min_size) resize(8*size/5);
       if (num_data<min_size) resize(min_size);
     }
     inline uint64_t& insert(const uint64_t& key,const uint64_t& map_key) {
