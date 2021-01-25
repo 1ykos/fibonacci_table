@@ -13,104 +13,6 @@ namespace gold{
   using std::cout;
   using std::endl;
 
-  constexpr uint64_t fibonacci_sequence[93] = {
-                       1ull,
-                       1ull,
-                       2ull,
-                       3ull,
-                       5ull,
-                       8ull,
-                      13ull,
-                      21ull,
-                      34ull,
-                      55ull,
-                      89ull,
-                     144ull,
-                     233ull,
-                     377ull,
-                     610ull,
-                     987ull,
-                    1597ull,
-                    2584ull,
-                    4181ull,
-                    6765ull,
-                   10946ull,
-                   17711ull,
-                   28657ull,
-                   46368ull,
-                   75025ull,
-                  121393ull,
-                  196418ull,
-                  317811ull,
-                  514229ull,
-                  832040ull,
-                 1346269ull,
-                 2178309ull,
-                 3524578ull,
-                 5702887ull,
-                 9227465ull,
-                14930352ull,
-                24157817ull,
-                39088169ull,
-                63245986ull,
-               102334155ull,
-               165580141ull,
-               267914296ull,
-               433494437ull,
-               701408733ull,
-              1134903170ull,
-              1836311903ull,
-              2971215073ull,
-              4807526976ull,
-              7778742049ull,
-             12586269025ull,
-             20365011074ull,
-             32951280099ull,
-             53316291173ull,
-             86267571272ull,
-            139583862445ull,
-            225851433717ull,
-            365435296162ull,
-            591286729879ull,
-            956722026041ull,
-           1548008755920ull,
-           2504730781961ull,
-           4052739537881ull,
-           6557470319842ull,
-          10610209857723ull,
-          17167680177565ull,
-          27777890035288ull,
-          44945570212853ull,
-          72723460248141ull,
-         117669030460994ull,
-         190392490709135ull,
-         308061521170129ull,
-         498454011879264ull,
-         806515533049393ull,
-        1304969544928657ull,
-        2111485077978050ull,
-        3416454622906707ull,
-        5527939700884757ull,
-        8944394323791464ull,
-       14472334024676221ull,
-       23416728348467685ull,
-       37889062373143906ull,
-       61305790721611591ull,
-       99194853094755497ull,
-      160500643816367088ull,
-      259695496911122585ull,
-      420196140727489673ull,
-      679891637638612258ull,
-     1100087778366101931ull,
-     1779979416004714189ull,
-     2880067194370816120ull,
-     4660046610375530309ull,
-     7540113804746346429ull,
-    12200160415121876738ull
-  };
-  // i:1$ while i>(1/2)**64 do (i:i/%phi,print(floor(i*2**64)));
-  //constexpr uint64_t iphi_powers[91];
-  
   vector<bool> inline fibonacci_encoding(uint64_t value) {
     vector<bool> encoding;
     uint64_t i=1,j=1;
@@ -152,7 +54,7 @@ namespace gold{
     return map;
   }
   
-  struct golden_tree{
+  struct fibonacci_table{
     uint64_t num_elem = 0;
     uint64_t num_data = 0;
     uint64_t* data = nullptr;
@@ -210,10 +112,10 @@ namespace gold{
         const uint64_t key,
         const uint64_t map_key) {
       uint64_t i;
-      for (uint64_t i=0;i!=num_data;++i) {
-        cout << (is_set(i)?'x':'o');
-      }
-      cout << endl;
+      //for (uint64_t i=0;i!=num_data;++i) {
+      //  cout << (is_set(i)?'x':'o');
+      //}
+      //cout << endl;
       for (i=map_key;is_set(i);i=(i+1==num_data)?0:i+1);
       set(i);
       data[i] = key;
@@ -229,7 +131,7 @@ namespace gold{
       return insert_assuming_space(key,fibonacci_mapping(key,num_data));
     }
     inline void resize(const uint64_t size) {
-      cout << "resize to " << size << " (" << num_elem << ")" << endl;
+      //cout << "resize to " << size << " (" << num_elem << ")" << endl;
       if (size==num_data) return;
       if (size <num_elem) throw std::domain_error(
             std::string(typeid(*this).name())
@@ -253,13 +155,16 @@ namespace gold{
           }
         }
         data = (uint64_t*)realloc(data,num_data*sizeof(uint64_t));
-        if (((old_num_data+63)/64)!=((num_data+63)/64)) {
-          mask = (uint64_t*)realloc(mask,(num_data+63)/64);
+        if (((old_num_data+63)/8)!=((num_data+63)/8)) {
+          mask = (uint64_t*)realloc(mask,(num_data+63)/8);
         }
       } else {
+        //cout << "realloc data " << num_data << " "
+        //     << num_data*sizeof(uint64_t) << endl;
         data = (uint64_t*)realloc(data,num_data*sizeof(uint64_t));
-        if (((old_num_data+63)/64)!=((num_data+63)/64)) {
-          mask = (uint64_t*)realloc(mask,(num_data+63)/64);
+        if (((old_num_data+63)/8)!=((num_data+63)/8)) {
+          //cout << "realloc mask " << (num_data+63)/8 << endl;
+          mask = (uint64_t*)realloc(mask,(num_data+63)/8);
           for (uint64_t i=(old_num_data+63)/64;i!=(num_data+63)/64;++i) {
             mask[i] = 0;
           }
@@ -274,7 +179,7 @@ namespace gold{
           }
           from = old_num_data-j;
         }
-        cout << "from = " << from << endl;
+        //cout << "from = " << from << endl;
         for (uint64_t i=from,j=0;
            //(j<old_num_data);
              (j<num_data)&&((j<num_data-old_num_data)||is_set(i));
@@ -289,20 +194,20 @@ namespace gold{
     }
     // load_factor = 2/3
     void inline ensure_size(uint64_t size) {
-      cout << "ensure_size(" << size << ")" << endl;
+      //cout << "ensure_size(" << size << ")" << endl;
       const uint64_t min_size = 3*size/2;
       if (num_data<min_size) resize(min_size);
     }
     inline uint64_t& insert(const uint64_t& key,const uint64_t& map_key) {
       ensure_size(num_elem+1);
       for (uint64_t i=0;i!=num_data;++i) {
-        cout << "|";
-        if (is_set(i)) {
-          cout<<data[i]<<" "<<fibonacci_mapping(data[i],num_data);
-        }
-        cout << endl;
+        //cout << "|";
+        //if (is_set(i)) {
+        //  cout<<data[i]<<" "<<fibonacci_mapping(data[i],num_data);
+        //}
+        //cout << endl;
       }
-      cout << endl;
+      //cout << endl;
       return insert_assuming_space(key);
     }
     inline uint64_t& insert(const uint64_t& key) {
@@ -317,7 +222,7 @@ namespace gold{
       if (i<num_data) return data[i];
       return insert(key,map_key);
     }
-    ~golden_tree(){
+    ~fibonacci_table(){
       free(data);
       free(mask);
     }
