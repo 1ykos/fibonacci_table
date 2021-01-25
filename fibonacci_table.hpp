@@ -135,6 +135,7 @@ namespace gold{
     inline uint64_t& insert_assuming_space(
         const uint64_t key,
         const uint64_t map_key) {
+      cout << "insert " << key << " " << map_key << endl;
       uint64_t i;
       for (i=map_key;is_set(i);i=(i+1==num_data)?0:i+1);
       set(i);
@@ -143,16 +144,17 @@ namespace gold{
       while (true) {
         const uint64_t j = i?i-1:num_data-1;
         if (!is_set(j)) {
-          //cout << "encountered empty slot" << endl;
+          cout << "encountered empty slot" << endl;
           break;
         }
         if (map_key>=fibonacci_mapping(data[j],num_data)) {
-          //cout << i << " " << j << " seems to be in order" << endl;
+          cout << i << " " << j << " seems to be in order" << endl;
           break;
         }
         swap(data[j],data[i]);
+        i = j;
       }
-      //cout << "moved to " << i << endl;
+      cout << "moved to " << i << endl;
       return data[i];
     }
     inline uint64_t& insert_assuming_space(const uint64_t& key) {
@@ -210,60 +212,30 @@ namespace gold{
           }
         }
         if (old_num_data==0) return;
-        /*uint64_t from = 0;
-        {
-          uint64_t i=1,j=1;
-          while ((i+j>=i)&&(i+j<old_num_data)) {
-            j=j+i;
-            i=j-i;
-            from = old_num_data-j-1;
-            cout << "from = " << from;
-            if (is_set(from))
-              cout << " " << fibonacci_mapping(data[from],num_data);
-            cout << endl;
-            for (uint64_t i=from,j=0;
-               //(j<old_num_data);
-                 (j<num_data)&&((j<=num_data-old_num_data)||is_set(i));
-                 ((i=((i+1)==old_num_data)?0:i+1),++j)) {
-              if (fibonacci_mapping(data[i],num_data)<old_num_data) continue;
-              if (!is_set(i)) continue;
-              const auto tmp = data[i];
-              erase(data[i],i);
-              insert(tmp);
-            }
+        const uint64_t from =
+          old_num_data-largest_fibonacci_not_greater_than(old_num_data); 
+        cout << "from " << from << " " << old_num_data << endl;
+        uint64_t i=from,j=0;
+        for (uint64_t i=from,j=0;
+             j!=num_data;
+             ((i=(i+1==old_num_data)?0:i+1),++j)) {
+          if (!is_set(i)) {
+            if (j<num_data-old_num_data) continue;
+            else                         break;
           }
-        }*/
-        /*
-        uint64_t from = 0;
-        {
-          uint64_t i=1,j=0;
-          while ((i+j>=i)&&(i+j<old_num_data)) {
-            j=j+i;
-            i=j-i;
-          }
-          from = old_num_data-j-1;
-        }
-        for (uint64_t i=from;i!=old_num_data;++i) {
           if (fibonacci_mapping(data[i],num_data)<old_num_data) continue;
-          if (!is_set(i)) continue;
           const auto tmp = data[i];
           erase(data[i],i);
           insert(tmp);
         }
+        /* // this is the stupid way
         for (uint64_t i=0;i!=old_num_data;++i) {
-          if (!is_set(i)) break;
-          if (fibonacci_mapping(data[i],num_data)<old_num_data) continue;
+          if (!is_set(i)) continue;
           const auto tmp = data[i];
           erase(data[i],i);
           insert(tmp);
         }
         */
-        for (uint64_t i=0;i!=old_num_data;++i) {
-          if (!is_set(i)) continue;
-          const auto tmp = data[i];
-          erase(data[i],i);
-          insert(tmp);
-        }
       }
       print_table();
     }
